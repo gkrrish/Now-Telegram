@@ -1,5 +1,6 @@
 package com.now.tele.util;
 
+import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
@@ -15,12 +16,21 @@ public class TelegramMessageUtility {
         return message;
     }
 
-    public static SendPhoto createPhotoMessage(long chatId, String photoUrl, String caption, InlineKeyboardMarkup markup) {
-        SendPhoto sendPhoto = new SendPhoto();
-        sendPhoto.setChatId(String.valueOf(chatId));
-        sendPhoto.setPhoto(new InputFile(photoUrl));
-        sendPhoto.setCaption(caption);
-        sendPhoto.setReplyMarkup(markup);
-        return sendPhoto;
+    public static SendPhoto createPhotoMessage(long chatId, InputFile inputFile, String caption, InlineKeyboardMarkup markup) {
+        SendPhoto photoMessage = new SendPhoto();
+        photoMessage.setChatId(String.valueOf(chatId));
+        photoMessage.setPhoto(inputFile);
+        photoMessage.setCaption(caption);
+        photoMessage.setReplyMarkup(markup);
+        return photoMessage;
+    }
+    
+    public static SendDocument createDocumentMessage(long chatId, InputFile inputFile, String caption, InlineKeyboardMarkup markup) {
+        SendDocument documentMessage = new SendDocument();
+        documentMessage.setChatId(String.valueOf(chatId));
+        documentMessage.setDocument(inputFile);
+        documentMessage.setCaption(caption);
+        documentMessage.setReplyMarkup(markup);
+        return documentMessage;
     }
 }
