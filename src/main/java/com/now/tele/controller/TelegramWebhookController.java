@@ -73,7 +73,6 @@ public class TelegramWebhookController {
 
     private String processUserMessage(String messageText, long chatId) {
     	
-    	   externalService.handleInitialRequest(messageText,chatId);
     	
         return "Processed message: " + messageText;
     }

@@ -1,4 +1,4 @@
-package com.now.tele.controller;
+package com.now.tele.connection.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
