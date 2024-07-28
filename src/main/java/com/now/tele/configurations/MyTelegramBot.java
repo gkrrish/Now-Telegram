@@ -36,12 +36,12 @@ public class MyTelegramBot extends TelegramLongPollingBot {
 
             SendMessage message = new SendMessage();
             message.setChatId(String.valueOf(chatId));
-            message.setText("You said: " + messageText);
+            message.setText("Welcome to our Telegram Service : " + messageText);
 
             try {
                 execute(message);
             } catch (TelegramApiException e) {
-                e.printStackTrace();
+                e.getMessage();
             }
         }
     }

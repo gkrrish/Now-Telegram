@@ -21,7 +21,7 @@ import com.now.tele.util.ButtonUtility;
 import com.now.tele.util.TelegramMessageUtility;
 
 @Service
-public class ExternalService {
+public class InitalRequestService {
 
     @Autowired
     private RestTemplate restTemplate;
