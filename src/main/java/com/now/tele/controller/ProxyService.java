@@ -1,11 +1,8 @@
 package com.now.tele.controller;
 
-import java.io.IOException;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import com.now.tele.external.InitalRequestService;
 
@@ -18,7 +15,7 @@ public class ProxyService {
 	@Autowired
 	private InitalRequestService externalService;
 
-	public void telegramMessages(Update update) throws IOException, TelegramApiException {
+	public void telegramMessages(Update update) throws Exception {
 		if (update.hasMessage() && update.getMessage().hasText()) {
 			String messageText = update.getMessage().getText();
 			long chatId = update.getMessage().getChatId();
@@ -32,7 +29,7 @@ public class ProxyService {
 		}
 	}
 	
-	public void anyMessageIntialRequest(String messageText, long chatId) throws IOException, TelegramApiException {
+	public void anyMessageIntialRequest(String messageText, long chatId) throws Exception {
 		externalService.handleInitialRequest(messageText, chatId);
 	}
 
