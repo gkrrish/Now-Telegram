@@ -4,11 +4,11 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Base64;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -24,9 +24,6 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import com.now.tele.configurations.MyTelegramBot;
 import com.now.tele.request.WelcomeRequest;
-import com.now.tele.response.WelcomeBackPDFResponse;
-import com.now.tele.response.WelcomeImageResponse;
-import com.now.tele.response.WelcomeResponse;
 import com.now.tele.util.ButtonUtility;
 import com.now.tele.util.TelegramMessageUtility;
 
@@ -54,31 +51,26 @@ public class InitalRequestService {
 		ResponseEntity<Resource> response = restTemplate.postForEntity(BASE_URL, httpEntity, Resource.class);
 		String contentType = response.getHeaders().getContentType().toString();
 
+		List<String> languages = response.getHeaders().getOrDefault("Languages", List.of("English")).stream()
+									.flatMap(lang -> Arrays.stream(lang.replaceAll("[\\[\\]]", "").split(", ")))
+									.collect(Collectors.toList());
+		
+		List<String> messages = response.getHeaders().getOrDefault("message", List.of("Welcome to NOW "));
+		List<String> delta = response.getHeaders().getOrDefault("Delta", List.of("Welcome Back to NOW "));
+		String message = String.join(" ", messages);
+		String deltaMessage = String.join(" ", delta);
+
+		
 		if (contentType.equals("application/pdf")) {
 			byte[] pdfData = response.getBody().getInputStream().readAllBytes();
 			
-			sendPdfResponse(chatId, pdfData, "Here is your requested PDF", "Do you want to change?");
+			sendPdfResponse(chatId, pdfData, message, deltaMessage);
 			
 		} else if (contentType.equals("image/png")) {
 			byte[] imageData = response.getBody().getInputStream().readAllBytes();
 			
-			sendImageResponse(chatId, imageData, "Here is your requested image", List.of("Language 1", "Language 2"));
+			sendImageResponse(chatId, imageData, message, languages);
 			
-		} else if (contentType.equals("application/json")) {
-			WelcomeResponse welcomeResponse = restTemplate.getForObject(BASE_URL, WelcomeResponse.class);
-			if (welcomeResponse instanceof WelcomeBackPDFResponse) {
-				WelcomeBackPDFResponse pdfResponse = (WelcomeBackPDFResponse) welcomeResponse;
-				byte[] pdfData = Base64.getDecoder().decode(pdfResponse.getInvoiceBase64());
-				sendPdfResponse(chatId, pdfData, pdfResponse.getMessage(), pdfResponse.getDelta());
-				
-			} else if (welcomeResponse instanceof WelcomeImageResponse) {
-				WelcomeImageResponse imageResponse = (WelcomeImageResponse) welcomeResponse;
-				byte[] imageData = Base64.getDecoder().decode(imageResponse.getImageBase64());
-				sendImageResponse(chatId, imageData, imageResponse.getMessage(), imageResponse.getLanguages());
-				
-			} else {
-				sendTextResponse(chatId, welcomeResponse.getMessage());
-			}
 		} else {
 			sendTextResponse(chatId, "Unsupported response type");
 		}
@@ -94,7 +86,7 @@ public class InitalRequestService {
 	}
 
 	private void sendImageResponse(long chatId, byte[] imageData, String message, List<String> languages) throws TelegramApiException {
-		InlineKeyboardMarkup markup = ButtonUtility.createInlineKeyboard(languages);
+		InlineKeyboardMarkup markup = ButtonUtility.createInlineKeyboard(languages, 1, 2);
 		
 		InputFile inputFile = new InputFile(new ByteArrayInputStream(imageData), "welcome-banner.png");
 		SendPhoto photoMessage = TelegramMessageUtility.createPhotoMessage(chatId, inputFile, message, markup);
