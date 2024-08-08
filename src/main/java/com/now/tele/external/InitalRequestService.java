@@ -37,6 +37,7 @@ public class InitalRequestService {
 	private MyTelegramBot telegramBot;
 
 	private static final String BASE_URL = "http://localhost:9009/welcome";
+	private final String BANNER_URL = "http://localhost:9009/banner/";
 
 	public void handleInitialRequest(String messageText, long chatId) throws IOException, TelegramApiException {
 		WelcomeRequest welcomeRequest = new WelcomeRequest();
@@ -49,6 +50,8 @@ public class InitalRequestService {
 		HttpEntity<WelcomeRequest> httpEntity = new HttpEntity<>(welcomeRequest, headers);
 
 		ResponseEntity<Resource> response = restTemplate.postForEntity(BASE_URL, httpEntity, Resource.class);
+		ResponseEntity<Resource> welcomeBackBannerResponse = restTemplate.getForEntity(BANNER_URL + "/" + 1, Resource.class);
+		
 		String contentType = response.getHeaders().getContentType().toString();
 
 		List<String> languages = response.getHeaders().getOrDefault("Languages", List.of("English")).stream()
@@ -59,11 +62,17 @@ public class InitalRequestService {
 		List<String> delta = response.getHeaders().getOrDefault("Delta", List.of("Welcome Back to NOW "));
 		String message = String.join(" ", messages);
 		String deltaMessage = String.join(" ", delta);
-
+		
+		
+		byte[] welcomeBackImageData = null;
+		if(delta!=null && !delta.get(0).equals("Welcome Back to NOW ")) { 
+			welcomeBackImageData = welcomeBackBannerResponse.getBody().getInputStream().readAllBytes();
+		}
 		
 		if (contentType.equals("application/pdf")) {
 			byte[] pdfData = response.getBody().getInputStream().readAllBytes();
 			
+			sendImagePlainResponse(chatId, welcomeBackImageData);
 			sendPdfResponse(chatId, pdfData, message, deltaMessage);
 			
 		} else if (contentType.equals("image/png")) {
@@ -99,4 +108,11 @@ public class InitalRequestService {
 		SendMessage textMessage = TelegramMessageUtility.createTextMessage(chatId, messageText, markup);
 		telegramBot.execute(textMessage);
 	}
+	
+	private void sendImagePlainResponse(long chatId, byte[] imageData) throws TelegramApiException {
+		InputFile inputFile = new InputFile(new ByteArrayInputStream(imageData), "welcome-back-banner.png");
+		SendPhoto photoMessage = TelegramMessageUtility.createPhotoMessage(chatId, inputFile, null, null);
+		telegramBot.execute(photoMessage);
+	}
+	
 }
